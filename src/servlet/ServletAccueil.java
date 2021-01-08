@@ -1,65 +1,88 @@
 package servlet;
 
 import java.io.IOException;
+import java.sql.*;
+import dao.ConnexionBDD;
+
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
-import java.sql.*;
-import dao.ConnexionBDD;
 
-/**
- * Servlet implementation class ServletAcceuil
- */
-@WebServlet("/ServletAcceuil")
+
+@WebServlet("/ServletAccueil")
 public class ServletAccueil extends HttpServlet {
+
 	private static final long serialVersionUID = 1L;
-       
-    /**
-     * @see HttpServlet#HttpServlet()
-     */
+
     public ServletAccueil() {
         super();
     }
 
-	/**
-	 * @see HttpServlet#doGet(HttpServletRequest request, HttpServletResponse response)
-	 */
+
 	protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+    	if(request.getAttribute("tab") == null) {
+			request.setAttribute("tab", "accueil");
+		}
+		request.setAttribute("error", "");
 		getServletContext().getRequestDispatcher("/jsp/accueil.jsp").forward(request, response);
+		ConnexionBDD.getInstance();
 	}
 
-	/**
-	 * @see HttpServlet#doPost(HttpServletRequest request, HttpServletResponse response)
-	 */
+
 	protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-		boolean valide = false;
+
+		String s = request.getParameter("Button");
+		String tab = "accueil";
+		String error = " ";
+
+		String mailConnexion = request.getParameter("form9");
+		String mdpConnexion = request.getParameter("form10");
+
+		String mailInscr = request.getParameter("emailInput");
+		String mdpInscr = request.getParameter("mdpInput");
+		String nomInscr = request.getParameter("nomInput");
+		String prenomInscr = request.getParameter("prenomInput");
+		String dateInscr = request.getParameter("dateInput");
+
+		String login = "";
+
 		try {
-			if ("Connexion".equals((String)request.getParameter("Button"))) {
-				valide = ConnexionBDD.getInstance().connecterUtilisateur(request.getParameter("form9"), request.getParameter("form10"));
-			}
-			else {
-				valide = ConnexionBDD.getInstance().ajouterUtilisateur(request.getParameter("emailInput"),request.getParameter("mdpInput"),request.getParameter("nomInput"),request.getParameter("prenomInput"),request.getParameter("dateInput"));
+			if (s.equals("Connexion")) {
+				tab = "connexion";
+				if(ConnexionBDD.getInstance().bdd().utilisateurExiste(mailConnexion, mdpConnexion)){
+					tab = "compte";
+					login = mailConnexion;
+				} else {
+					error = "connexion";
+				}
+			} else if(s.equals("Inscription")){
+				tab = "inscription";
+				if(ConnexionBDD.getInstance().bdd().ajouterUtilisateur(mailInscr, mdpInscr, nomInscr, prenomInscr, dateInscr)){
+					tab = "compte";
+					login = mailInscr;
+				} else {
+					error = "inscription";
+				}
 			}
 		} catch (SQLException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
+
 		}
-		if(valide) {
-			HttpSession session = request.getSession();
-			if("Connexion".equals((String)request.getParameter("Button"))) {
-				session.setAttribute("login", request.getParameter("form9"));
-			}
-			else {
-				session.setAttribute("login", request.getParameter("login"));
-			}
-			getServletContext().getRequestDispatcher("/jsp/moncompte.jsp").forward(request, response);
-		}
-		else {
+
+
+		if(!tab.equals("compte")){
+			request.setAttribute("tab", tab);
+			request.setAttribute("error", error);
 			getServletContext().getRequestDispatcher("/jsp/accueil.jsp").forward(request, response);
+		} else {
+			HttpSession session = request.getSession();
+			session.setAttribute("login", login);
+			response.sendRedirect(request.getContextPath()+"/MonCompte");
 		}
+
 	}
 
 }

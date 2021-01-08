@@ -44,3 +44,22 @@ $spacer: 1.5rem;
 @import 'bootstrap-4.3.1';
 
 .ghost{display:none}
+
+.badge-notify{
+   background:red;
+   position:relative;
+   top: -10px;
+   left: -10px;
+}
+
+.list-group{
+    max-height: 475;
+    margin-bottom: 10px;
+    overflow:scroll;
+  	overflow-x: hidden;
+    -webkit-overflow-scrolling: touch;
+}
+.dropdown-menu{
+    max-height: 400px;
+    overflow-y: auto;
+}
